@@ -3,16 +3,17 @@
         {
             "name": "Win32",
             "includePath": [
-                "C:\\\\Users\\\\conno\\\\OneDrive\\\\Documents\\\\Arduino\\\\libraries\\\\MPU6050\\\\src",
-                "C:\\\\Program Files\\\\Arduino\\\\tools\\\\**",
-                "C:\\\\Program Files\\\\Arduino\\\\hardware\\\\arduino\\\\avr\\\\**",
-                "C:\\\\Users\\\\conno\\\\OneDrive\\\\Documents\\\\Arduino\\\\libraries\\\\Adafruit-Motor-Shield-library-master",
-                "C:\\\\Users\\\\conno\\\\OneDrive\\\\Documents\\\\Arduino\\\\libraries\\\\SimpleSoftwareServo",
+                "C:\\\\\\\\Users\\\\\\\\conno\\\\\\\\OneDrive\\\\\\\\Documents\\\\\\\\Arduino\\\\\\\\libraries\\\\\\\\MPU6050\\\\\\\\src",
+                "C:\\\\\\\\Program Files\\\\\\\\Arduino\\\\\\\\tools\\\\\\\\**",
+                "C:\\\\\\\\Program Files\\\\\\\\Arduino\\\\\\\\hardware\\\\\\\\arduino\\\\\\\\avr\\\\\\\\**",
+                "C:\\\\\\\\Users\\\\\\\\conno\\\\\\\\OneDrive\\\\\\\\Documents\\\\\\\\Arduino\\\\\\\\libraries\\\\\\\\Adafruit-Motor-Shield-library-master",
+                "C:\\\\\\\\Users\\\\\\\\conno\\\\\\\\OneDrive\\\\\\\\Documents\\\\\\\\Arduino\\\\\\\\libraries\\\\\\\\Lift",
+                "C:\\\\\\\\Users\\\\\\\\conno\\\\\\\\OneDrive\\\\\\\\Documents\\\\\\\\Arduino\\\\\\\\libraries\\\\\\\\SimpleSoftwareServo",
                 "${workspaceFolder}/**",
                 "C://Program Files/Arduino/libraries/**",
                 "C:/Program Files/Arduino/hardware/tools/**",
                 "C:/Program Files/Arduino/hardware/arduino/**",
-                "${workspaceFolder}/libraries"
+                "C:/Program Files/Arduino/libraries/Servo/src"
             ],
             "defines": [
                 "_DEBUG",
@@ -21,7 +22,7 @@
             ],
             "intelliSenseMode": "msvc-x64",
             "forcedInclude": [
-                "C:\\\\Program Files\\\\Arduino\\\\hardware\\\\arduino\\\\avr\\\\cores\\\\arduino\\\\Arduino.h"
+                "C:\\\\\\\\Program Files\\\\\\\\Arduino\\\\\\\\hardware\\\\\\\\arduino\\\\\\\\avr\\\\\\\\cores\\\\\\\\arduino\\\\\\\\Arduino.h"
             ]
         }
     ],
