@@ -31,15 +31,26 @@ float rightXAxis;
 
 int angle = 90;
 
+int turretEncoderPinA = 0;
+int turretEncoderPinB = 0;
+int liftEncoderPinA = 0;
+int liftEncoderPinB = 0;
+
+int armServoPin = 0;
+int climbServoPin = 1;
+
 void setup() {
     bluetooth.begin(9600);
 
     pwm.begin();
     pwm.setPWMFreq(60);
-    // pinMode(encoderPinA, INPUT);
-    // pinMode(encoderPinB, INPUT);
+    
+    pinMode(turretEncoderPinA, INPUT);
+    pinMode(turretEncoderPinB, INPUT);
+    pinMode(liftEncoderPinA, INPUT);
+    pinMode(liftEncoderPinB, INPUT);
 
-    delay(100);
+    delay(1000);
 }
 
 void loop() {
@@ -93,9 +104,7 @@ void liftControl(int liftPower) {
 
 void intakeControl(int intakePower) {
     intakeMotor.run((intakePower >= 0) ? FORWARD : BACKWARD);
-    if (intakePower < -0.8) {
-        intakeMotor.setSpeed(-255);
-    } else if (intakePower > 0.8) {
+    if (abs(intakePower) > 0.8) {
         intakeMotor.setSpeed(255);
     } else {
         intakeMotor.setSpeed(0);
@@ -116,23 +125,4 @@ void intakeControl(int intakePower) {
 //     encoder0PinALast = n;
 //     return encoder0Pos;
 // }
-
-// void runLiftMotor(int liftMotorSpeed) {
-//     if (liftMotorSpeed < -1) {
-//         liftMotorSpeed = -1;
-//     } else if (liftMotorSpeed > 1) {
-//         liftMotorSpeed = 1;
-//     }
-
-//     if (liftMotorSpeed > 0) {
-//         digitalWrite(40, LOW);
-//         analogWrite(41, liftMotorSpeed * 240);
-//     } else {
-//         digitalWrite(41, LOW);
-//         analogWrite(40, -liftMotorSpeed * 240);
-//     }
-// }
-
-    // mBackRight.run((finalPower[3] <= 0) ? FORWARD : BACKWARD);
-    // mBackRight.setSpeed(abs(finalPower[3]));
 
