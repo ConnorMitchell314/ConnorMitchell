@@ -1,4 +1,4 @@
-//#include <Wire.h>
+#include <Wire.h>
 #include <SoftwareSerial.h>
 #include <AFMotor.h>
 //#include <SimpleSoftwareServo.h>
@@ -19,57 +19,207 @@ AF_DCMotor intakeMotor(4);
 
 //Servo climbServo;
 
+//Servo arm;
+
 //Driver Station inputs
 float leftXAxis;
 float leftYAxis;
 float trigger;
 float rightYAxis;
 float rightXAxis;
+int aButton;
+int bButton;
+int xButton;
+int yButton;
+int leftBumper;
+int rightBumper;
+int auto1, auto2, auto3, auto4, auto5;
+int autoReset = 0;
 
-#define SERVOMIN 150
-#define SERVOMAX 550
+#define SERVOMIN 270
+#define SERVOMAX 530
 
-int angle = 90;
+const int liftDTPin = 52;
+const int liftCLKPin = 53;
 
-int turretEncoderPinA = 0;
-int turretEncoderPinB = 0;
-int liftEncoderPinA = 0;
-int liftEncoderPinB = 0;
+long timeOfLastDebounce = 0;
+int delayOfDebounce = 0.01;
+
+int liftPreviousCLK;
+int liftPreviousDATA;
+
+int liftCurEncValue = 0;
 
 int armServoPin = 0;
 int climbServoPin = 1;
+
+int armAngle = 60;
+int armAngleOffset = 1;
+
 
 void setup() {
     bluetooth.begin(9600);
 
     pwm.begin();
     pwm.setPWMFreq(60);
-    
-    pinMode(turretEncoderPinA, INPUT);
-    pinMode(turretEncoderPinB, INPUT);
-    pinMode(liftEncoderPinA, INPUT);
-    pinMode(liftEncoderPinB, INPUT);
+    pwm.setPWM(armServoPin, 0, SERVOMIN);
 
     delay(1000);
+    //arm.attach(45);
+    liftPreviousCLK = digitalRead(liftCLKPin);
+    liftPreviousDATA = digitalRead(liftDTPin);
+
 }
 
 void loop() {
     while (bluetooth.available() > 0) {
         if ((bluetooth.read()) == 'z') {
-            leftXAxis = bluetooth.parseFloat() * 100;
-            leftYAxis = bluetooth.parseFloat() * 100;
+            leftXAxis = bluetooth.parseFloat();
+            leftYAxis = bluetooth.parseFloat();
             trigger = bluetooth.parseFloat();
-            rightYAxis = bluetooth.parseFloat() * 255;
+            rightYAxis = bluetooth.parseFloat();
             rightXAxis = bluetooth.parseFloat();
-            drive(leftXAxis, leftYAxis);
+            aButton = bluetooth.parseInt();
+            bButton = bluetooth.parseInt();
+            xButton = bluetooth.parseInt();
+            yButton = bluetooth.parseInt();
+            leftBumper = bluetooth.parseInt();
+            rightBumper = bluetooth.parseInt();
+            auto1 = bluetooth.parseInt();
+            auto2 = bluetooth.parseInt();
+            auto3 = bluetooth.parseInt();
+            auto4 = bluetooth.parseInt();
+            auto5 = bluetooth.parseInt();
+            if (autoReset == 0) {
+                autoReset = bluetooth.parseInt();
+
+            }
+            
+            drive(leftXAxis, -leftYAxis);
             turntableControl(rightXAxis);
-            liftControl(rightYAxis);
+            liftControl(rightYAxis, aButton - yButton, leftBumper - rightBumper, bButton - xButton);
             intakeControl(trigger);
-        } 
+           // arm.write(90);
+           autonomousModes();
+        }
+        if ((millis() - timeOfLastDebounce) > delayOfDebounce) {
+            readLiftEncoder();
+            liftPreviousCLK = digitalRead(liftCLKPin);
+            liftPreviousDATA = digitalRead(liftDTPin);
+            timeOfLastDebounce = millis();
+        }
+
     }
 }
 
-void drive(int xPower, int yPower) {
+int readLiftEncoder() {
+    if ((liftPreviousCLK == 0) && (liftPreviousDATA == 1)) {
+        if ((digitalRead(liftCLKPin) == 1) && (digitalRead(liftDTPin) == 0)) {
+            liftCurEncValue ++;
+        }
+        if ((digitalRead(liftCLKPin) == 1) && (digitalRead(liftDTPin) == 1)) {
+            liftCurEncValue --;
+        }
+    }
+    if ((liftPreviousCLK == 1) && (liftPreviousDATA == 0)) {
+        if ((digitalRead(liftCLKPin) == 0) && (digitalRead(liftDTPin) == 1)) {
+            liftCurEncValue ++;
+        }
+        if ((digitalRead(liftCLKPin) == 0) && (digitalRead(liftDTPin) == 0)) {
+            liftCurEncValue --;
+        }
+    }
+    if ((liftPreviousCLK == 1) && (liftPreviousDATA == 1)) {
+        if ((digitalRead(liftCLKPin) == 0) && (digitalRead(liftDTPin) == 1)) {
+            liftCurEncValue ++;
+        }
+        if ((digitalRead(liftCLKPin) == 0) && (digitalRead(liftDTPin) == 0)) {
+            liftCurEncValue --;
+        }
+    }
+    if ((liftPreviousCLK == 0) && (liftPreviousDATA == 0)) {
+        if ((digitalRead(liftCLKPin) == 1) && (digitalRead(liftDTPin) == 0)) {
+            liftCurEncValue ++;
+        }
+        if ((digitalRead(liftCLKPin) == 1) && (digitalRead(liftDTPin) == 1)) {
+            liftCurEncValue --;
+        }
+    }
+    return liftCurEncValue;
+}
+
+void autonomousModes() {
+    //automodes
+            if (auto1 == 1 && autoReset == 1) { //left cargo ship score, level 1
+                drive(0, 1);
+                turntableControl(1);
+                //pwm.setPWM(armServoPin, 0, SERVOMIN);
+                liftControl(-1, -1, 0, 0);
+                delay(1000);
+                liftControl(0, -1, 0, 0);
+                drive(0, -1);
+                delay(1000);
+                drive(0, 1);
+                delay(1500);
+                drive(0.25, 0.7);
+                delay(500);
+                drive(-0.25, 0.7);
+                delay(500);
+                drive(0, 0);
+                turntableControl(0);
+                intakeControl(0);
+                delay(2000);
+                intakeControl(0);
+                auto1 = 0;
+                autoReset = 0;
+            } else if (auto2 == 1 && autoReset == 1) { //right cargo ship score, level 1
+                drive(0, 1);
+                turntableControl(-1);
+                pwm.setPWM(armServoPin, 0, SERVOMIN);
+                delay(1000);
+                drive(0, 0);
+                turntableControl(0);
+                intakeControl(0);
+                delay(2000);
+                intakeControl(0);
+                auto2 = 0;
+                autoReset = 0;
+            } else if (auto3 == 1 && autoReset == 1) { //left level 2 start
+                drive(0, 1);
+                delay(1500);
+                drive(-0.5, 1);
+                delay(500);
+                drive(0.5, 1);
+                delay(500);
+                drive(0, 0);
+                auto3 = 0;
+                autoReset = 0;
+            } else if (auto4 == 1 && autoReset == 1) { //right level 2 start
+                drive(0, 1);
+                delay(1500);
+                drive(-0.5, 1);
+                delay(500);
+                drive(0.5, 1);
+                delay(500);
+                drive(0, 0);
+                auto4 = 0;
+                autoReset = 0;
+            } else if (auto5 == 1 && autoReset == 1) {
+                drive(0, 1);
+                liftControl(1, 0, 0, -1);
+                delay(1000);
+                drive(0, 0);
+                for (int i = 0 ; i < 4 ; i ++) {
+                    liftControl(0, 0, 1, 0);
+                }
+                drive(0, -1);
+                delay(500);
+                drive(0, 0);
+            }
+}
+void drive(float xPower, float yPower) {
+    xPower *= 100;
+    yPower *= -100;
     float v = (100 - abs(yPower)) * (xPower/100) + xPower;
     float w = (100 - abs(xPower)) * (yPower/100) + yPower;
     float velocityL = ((((v - w) / 2) / 100) * 255);
@@ -81,25 +231,57 @@ void drive(int xPower, int yPower) {
     dmRight.setSpeed(abs(velocityR));
 }
 
-void turntableControl(int rotationPower) {
+void turntableControl(float rotationPower) {
     if (rotationPower > 0) {
-        digitalWrite(40, LOW);
-        analogWrite(41, rotationPower * 240);
-    } else {
         digitalWrite(41, LOW);
-        analogWrite(40, -rotationPower * 240);
+        analogWrite(40, rotationPower * 240);
+    } else {
+        digitalWrite(40, LOW);
+        analogWrite(41, -rotationPower * 240);
     }
 }
 
-void liftControl(int liftPower) {
+void liftControl(int liftPower, int angleAdjustment, int newOffset, int mediumPosition) {
     //lift
     liftMotor.run((liftPower >= 0) ? FORWARD : BACKWARD);
-    liftMotor.setSpeed(abs(liftPower));
+    liftMotor.setSpeed(abs(liftPower) * 255);
     //arm
-    uint16_t servoPulse = ((angle/180)*(SERVOMAX-SERVOMIN))+SERVOMIN;
-    if (servoPulse > SERVOMAX) servoPulse = SERVOMAX;
-    if (servoPulse < SERVOMIN) servoPulse = SERVOMIN;
-    pwm.setPWM(0, 0, 300);
+    // uint16_t servoPulse = ((angle/180)*(SERVOMAX-SERVOMIN))+SERVOMIN;
+    // if (servoPulse > SERVOMAX) servoPulse = SERVOMAX;
+    // if (servoPulse < SERVOMIN) servoPulse = SERVOMIN;
+    if (angleAdjustment == 1) {
+        armAngle = SERVOMAX;
+        armAngleOffset = 0;
+    } else if (angleAdjustment == -1) {
+        armAngle = SERVOMIN;
+        armAngleOffset = 0;
+    } else if (mediumPosition == 1) {
+        armAngle = 370;
+        armAngleOffset = 0;
+    } else if (mediumPosition == -1) {
+        armAngle = 450;
+        armAngleOffset = 0;
+    }
+    if (newOffset == 1) {
+        armAngleOffset += 10;
+    } else if (newOffset == -1) {
+        armAngleOffset -= 10;
+    }
+    pwm.setPWM(armServoPin, 0, armAngle + armAngleOffset);
+    //servoPulse += 5 * angleAdjustment;
+    //pwm.setPWM(0, 0, servoPulse + servoPulseOffset);
+    // if (liftCurEncValue > 100) {
+    //     turntableControl(-1);
+    // } else {
+    //     turntableControl(1);
+    // }
+}
+
+void armServoControl(int angle) {
+    if (angle < 0) angle = 0;
+    if (angle > 110) angle = 110;
+    float servoPulse = ((angle / 110) * (SERVOMAX - SERVOMIN)) + SERVOMIN;
+    pwm.setPWM(0, 0, servoPulse);
 }
 
 void intakeControl(int intakePower) {
